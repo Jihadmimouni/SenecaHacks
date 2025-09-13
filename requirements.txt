@@ -14,10 +14,18 @@ torch>=2.1.0+cu118
 
 # LLM / API
 openai>=1.0.0
+python-dotenv>=0.21.0
+pydantic>=2.4.0
 
 # API / server
 fastapi>=0.105.0
 uvicorn>=0.23.0
+python-multipart>=0.0.6
 
-# Optional: JSON parsing
+# Text processing
+tiktoken>=0.5.0
+langchain>=0.0.300
+
+# Utils
 orjson>=3.9.0  # faster JSON handling
+typing-extensions>=4.8.0
