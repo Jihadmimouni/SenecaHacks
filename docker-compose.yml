@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=adminpassword
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - vectnet
+
+  weaviate:
+    image: semitechnologies/weaviate:1.22.0
+    restart: unless-stopped
+    environment:
+      - QUERY_DEFAULTS_LIMIT=20
+      - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+    ports:
+      - "8080:8080"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    networks:
+      - vectnet
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    depends_on:
+      - weaviate
+    environment:
+      - WEAVIATE_URL=http://weaviate:8080
+    ports:
+      - "5000:5000"
+    networks:
+      - vectnet
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  n8n_data:
+  weaviate_data:
+
+networks:
+  vectnet: 
