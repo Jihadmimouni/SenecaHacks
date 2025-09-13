@@ -11,6 +11,16 @@ app = Flask(__name__)
 # Weaviate client
 client = weaviate.Client(url=WEAVIATE_URL)
 
+# Wait for Weaviate to be ready
+for i in range(10):
+    try:
+        client.schema.get()
+        print("Weaviate ready")
+        break
+    except Exception:
+        print("Waiting for Weaviate...")
+        time.sleep(2)
+
 # Load SentenceTransformer once at startup
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -63,7 +73,7 @@ def ingest():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    return jsonify({"status": "ok", "vector": embedding}), 201
+    return jsonify({"status": "ok"}), 201
 
 @app.route("/query", methods=["POST"])
 def query():
@@ -92,5 +102,15 @@ def query():
         matches = res
 
     return jsonify({"results": matches})
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Simple health check endpoint"""
+    try:
+        # Check if Weaviate is accessible
+        client.schema.get()
+        return jsonify({"status": "healthy"}), 200
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 
