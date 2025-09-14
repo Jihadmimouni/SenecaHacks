@@ -22,8 +22,8 @@ static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::stri
 HealthDataProcessor::HealthDataProcessor(const std::string& data_dir)
     : data_dir_(data_dir)
     , api_url_("http://localhost:5000/ingest")
-    , batch_size_(100)
-    , max_concurrent_(10) {
+    , batch_size_(1000)
+    , max_concurrent_(1000) {  // Updated limit to 1000
     
     // Initialize CURL globally
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -375,32 +375,16 @@ bool HealthDataProcessor::sendToVectorAPI(const std::string& user_id,
 
 void HealthDataProcessor::processBatch(const std::vector<std::tuple<std::string, std::string, std::string>>& batch) {
     std::cout << "Processing batch of " << batch.size() << " summaries..." << std::endl;
-    
-    // Use thread pool for concurrent API calls
-    std::vector<std::future<bool>> futures;
-    size_t concurrent_count = std::min(batch.size(), max_concurrent_);
-    
-    for (size_t i = 0; i < batch.size(); i += concurrent_count) {
-        futures.clear();
-        
-        for (size_t j = i; j < std::min(i + concurrent_count, batch.size()); ++j) {
-            const auto& [user_id, date, summary] = batch[j];
-            
-            futures.push_back(std::async(std::launch::async, [this, user_id, date, summary]() {
-                return sendToVectorAPI(user_id, date, summary);
-            }));
+
+    // Simplified batch processing logic
+    size_t success_count = 0;
+    for (const auto& [user_id, date, summary] : batch) {
+        if (sendToVectorAPI(user_id, date, summary)) {
+            success_count++;
         }
-        
-        // Wait for this chunk to complete
-        size_t success_count = 0;
-        for (auto& future : futures) {
-            if (future.get()) {
-                success_count++;
-            }
-        }
-        
-        std::cout << "Chunk completed: " << success_count << "/" << futures.size() << " successful" << std::endl;
     }
+
+    std::cout << "Batch completed: " << success_count << "/" << batch.size() << " successful" << std::endl;
 }
 
 } // namespace health_ingestion
