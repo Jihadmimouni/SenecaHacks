@@ -1,0 +1,84 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=adminpassword
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - vectnet
+
+  weaviate:
+    image: semitechnologies/weaviate:1.22.0   # pin version
+    restart: unless-stopped
+    environment:
+      - QUERY_DEFAULTS_LIMIT=20
+      - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+      - CLUSTER_HOSTNAME=node1                # keep shards on same node
+    ports:
+      - "8080:8080"
+    volumes:
+      - weaviate_data:/var/lib/weaviate       # persisted data
+    networks:
+      - vectnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    depends_on:
+      - weaviate
+    environment:
+      - WEAVIATE_URL=http://weaviate:8080
+    ports:
+      - "5000:5000"
+    networks:
+      - vectnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  ingestion:
+    build: ./app/cpp_ingestion
+    restart: unless-stopped  # Keep running after ingestion completes
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      - API_URL=http://api:5000/ingest
+    volumes:
+      - ./app/data:/data:ro  # Mount data directory as read-only
+    networks:
+      - vectnet
+    ports:
+      - "9090:9090"  # Optional: for future status endpoint
+
+volumes:
+  n8n_data:
+  weaviate_data:
+
+networks:
+  vectnet:
