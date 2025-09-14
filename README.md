@@ -1,6 +1,6 @@
-# Vector Search & N8N Health Data Platform
+# Vector Search & N8N Health Data Platform - Backend
 
-A comprehensive health and fitness data processing platform using vector similarity search, workflow automation, and high-performance data ingestion. Built with Weaviate vector database, Flask API, N8N workflows, and optimized C++ processing.
+A comprehensive **backend system** for health and fitness data processing using vector similarity search, workflow automation, and high-performance data ingestion. Built with Weaviate vector database, Flask API, N8N workflows, and optimized C++ processing.
 
 ## 🚀 Quick Start
 
@@ -616,10 +616,6 @@ sudo docker run --rm -v project_n8n_data:/data -v $(pwd):/backup alpine tar czf 
 # Restore from backup
 sudo docker run --rm -v project_weaviate_data:/data -v $(pwd):/backup alpine tar xzf /backup/weaviate_backup.tar.gz -C /data --strip 1
 ```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 

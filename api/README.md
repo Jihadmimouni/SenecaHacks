@@ -1,6 +1,6 @@
-# Flask Vector Search API
+# Flask Vector Search API - Backend Service
 
-A Flask-based API service for health data vector similarity search using Weaviate and sentence transformers.
+A Flask-based **backend API service** for health data vector similarity search using Weaviate and sentence transformers.
 
 ## Overview
 

@@ -1,6 +1,6 @@
-# Docker Deployment Guide
+# Docker Deployment Guide - Backend Services
 
-Comprehensive guide for deploying and managing the Vector Search & N8N health data processing platform using Docker Compose.
+Comprehensive guide for deploying and managing the Vector Search & N8N health data processing **backend platform** using Docker Compose.
 
 ## Overview
 
